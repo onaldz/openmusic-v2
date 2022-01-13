@@ -10,35 +10,56 @@ class SongsService {
     this._pool = new Pool();
   }
 
-  async addSong({
-    title, year, performer, genre, duration, owner,
-  }) {
-    const id = nanoid(16);
+  // async addSong({
+  //   title, year, performer, genre, duration, owner,
+  // }) {
+  //   const id = nanoid(16);
+  //   const insertedAt = new Date().toISOString();
+  //   const updatedAt = insertedAt;
+
+  //   const query = {
+  //     text: 'INSERT INTO songs VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id',
+  //     values: [id, title, year, performer, genre, duration, insertedAt, updatedAt, owner],
+  //   };
+
+  //   const result = await this._pool.query(query);
+
+  //   if (!result.rows[0].id) {
+  //     throw new InvariantError('Lagu gagal ditambahkan');
+  //   }
+
+  //   return result.rows[0].id;
+  // }
+  async addSong(payload) {
+    const id = `song-${nanoid(16)}`;
     const insertedAt = new Date().toISOString();
-    const updatedAt = insertedAt;
 
     const query = {
-      text: 'INSERT INTO songs VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id',
-      values: [id, title, year, performer, genre, duration, insertedAt, updatedAt, owner],
+        text: 'INSERT INTO songs VALUES($1, $2, $3, $4, $5, $6, $7, $7) RETURNING id',
+        values: [id, ...Object.values(payload), insertedAt],
     };
 
     const result = await this._pool.query(query);
 
     if (!result.rows[0].id) {
-      throw new InvariantError('Lagu gagal ditambahkan');
+        throw new InvariantError('Lagu gagal ditambahkan');
     }
 
     return result.rows[0].id;
-  }
+}
 
-  async getSongs(owner) {
-    const query = {
-      text: 'SELECT * FROM songs WHERE owner = $1',
-      values: [owner],
-    };
-    const result = await this._pool.query(query);
-    return result.rows.map(mapDBGetAll);
-  }
+  // async getSongs(owner) {
+  //   const query = {
+  //     text: 'SELECT * FROM songs WHERE owner = $1',
+  //     values: [owner],
+  //   };
+  //   const result = await this._pool.query(query);
+  //   return result.rows.map(mapDBGetAll);
+  // }
+  async getSongs() {
+    const result = await this._pool.query('SELECT id,title,performer FROM songs');
+    return result.rows.map(mapDBToModel);
+}
 
   async getSongById(id) {
     const query = {
@@ -84,20 +105,20 @@ class SongsService {
   }
 
   // Code Baru
-  async verifySongOwner(id, owner) {
-    const query = {
-      text: 'SELECT * FROM songs WHERE id = $1',
-      values: [id],
-    };
-    const result = await this._pool.query(query);
-    if (!result.rows.length) {
-      throw new NotFoundError('Lagu tidak ditemukan');
-    }
-    const song = result.rows[0];
-    if (song.owner !== owner) {
-      throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
-    }
-  }
+  // async verifySongOwner(id, owner) {
+  //   const query = {
+  //     text: 'SELECT * FROM songs WHERE id = $1',
+  //     values: [id],
+  //   };
+  //   const result = await this._pool.query(query);
+  //   if (!result.rows.length) {
+  //     throw new NotFoundError('Lagu tidak ditemukan');
+  //   }
+  //   const song = result.rows[0];
+  //   if (song.owner !== owner) {
+  //     throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
+  //   }
+  // }
 }
 
 module.exports = SongsService;
